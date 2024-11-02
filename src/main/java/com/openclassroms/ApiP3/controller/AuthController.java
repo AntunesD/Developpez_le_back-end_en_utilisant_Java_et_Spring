@@ -114,8 +114,8 @@ public class AuthController {
             userDTO.setId(user.getId());
             userDTO.setName(user.getName());
             userDTO.setEmail(user.getEmail());
-            userDTO.setCreatedAt(user.getCreatedAt());
-            userDTO.setUpdatedAt(user.getUpdatedAt());
+            userDTO.setCreated_at(user.getCreated_at());
+            userDTO.setUpdated_at(user.getUpdated_at());
 
             return ResponseEntity.ok(userDTO);
         } catch (Exception e) {

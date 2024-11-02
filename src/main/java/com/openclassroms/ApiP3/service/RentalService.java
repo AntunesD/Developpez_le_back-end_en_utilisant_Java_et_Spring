@@ -63,8 +63,8 @@ public class RentalService {
             dto.setOwnerId(rental.getOwner().getId()); // Récupérer l'ID du propriétaire
             dto.setOwnerName(rental.getOwner().getName()); // Récupérer le nom du propriétaire
         }
-        dto.setCreatedAt(rental.getCreatedAt().toString());
-        dto.setUpdatedAt(rental.getUpdatedAt().toString());
+        dto.setCreated_at(rental.getCreatedAt().toString());
+        dto.setUpdated_at(rental.getUpdatedAt().toString());
         return dto;
     }
 }

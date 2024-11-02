@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class JwtUtil {
-private static final String SECRET_KEY = "mySecretKey"; // Changez cela en une clé plus forte
+    private static final String SECRET_KEY = "mySecretKey"; // Changez cela en une clé plus forte
     private static final long EXPIRATION_TIME = 86400000; // 24 heures
 
     public static String generateToken(String email, String name) {
@@ -24,11 +24,14 @@ private static final String SECRET_KEY = "mySecretKey"; // Changez cela en une c
         String header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
 
         // Payload
-        String payload = "{\"sub\":\"" + email + "\",\"name\":\"" + name + "\",\"exp\":" + (expiryDate.getTime() / 1000) + "}";
+        String payload = "{\"sub\":\"" + email + "\",\"name\":\"" + name + "\",\"exp\":" + (expiryDate.getTime() / 1000)
+                + "}";
 
         // Encodage
-        String base64Header = Base64.getUrlEncoder().withoutPadding().encodeToString(header.getBytes(StandardCharsets.UTF_8));
-        String base64Payload = Base64.getUrlEncoder().withoutPadding().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+        String base64Header = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(header.getBytes(StandardCharsets.UTF_8));
+        String base64Payload = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(payload.getBytes(StandardCharsets.UTF_8));
 
         // Signature
         String signature = createSignature(base64Header, base64Payload);

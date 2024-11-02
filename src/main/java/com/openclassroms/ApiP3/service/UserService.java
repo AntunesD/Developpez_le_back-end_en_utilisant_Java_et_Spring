@@ -18,26 +18,29 @@ public class UserService {
     private UserRepository userRepository;
 
 
-    public User registerUser(RegisterDTO registerDTO) { // Utilise RegisterDTO ici
+    public User registerUser(RegisterDTO registerDTO) {
         // Validation basique
         if (registerDTO.getEmail() == null || registerDTO.getName() == null || registerDTO.getPassword() == null) {
             throw new IllegalArgumentException("Email, Name, and Password cannot be null");
         }
-
+    
         // Conversion du DTO en entité
         User user = new User();
         user.setEmail(registerDTO.getEmail());
         user.setName(registerDTO.getName());
-
+    
         // Cryptage du mot de passe
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         user.setPassword(encoder.encode(registerDTO.getPassword())); // Utilise le mot de passe de RegisterDTO
-
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
-
+    
+        // Définition des dates
+        LocalDateTime now = LocalDateTime.now();
+        user.setCreated_at(now);
+        user.setUpdated_at(now);
+    
         return userRepository.save(user);
     }
+    
 
     public String loginUser(String email, String password) {
         User user = userRepository.findByEmail(email);
@@ -73,8 +76,8 @@ public class UserService {
         dto.setId(user.getId());
         dto.setEmail(user.getEmail());
         dto.setName(user.getName());
-        dto.setCreatedAt(user.getCreatedAt());
-        dto.setUpdatedAt(user.getUpdatedAt());
+        dto.setCreated_at(user.getCreated_at());
+        dto.setUpdated_at(user.getUpdated_at());
         return dto;
     }
 

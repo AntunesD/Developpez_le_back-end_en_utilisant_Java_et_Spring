@@ -9,11 +9,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
     @Override
-    @SuppressWarnings("null") 
+    @SuppressWarnings("null")
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("*")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS")
-                .allowedHeaders("Content-Type", "Origin", "Accept", "Authorization", "Content-Length", "X-Requested-With");
+                .allowedHeaders("Content-Type", "Origin", "Accept", "Authorization", "Content-Length",
+                        "X-Requested-With");
     }
 }

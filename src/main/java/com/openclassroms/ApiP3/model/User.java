@@ -3,6 +3,8 @@ package com.openclassroms.ApiP3.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,8 +30,11 @@ public class User {
     private String name;
     private String password;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime created_at;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updated_at;
 
     @OneToMany(mappedBy = "owner")
     private List<Rental> rentals;

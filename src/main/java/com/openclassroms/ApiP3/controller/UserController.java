@@ -16,7 +16,7 @@ import com.openclassroms.ApiP3.service.UserService;
 @RequestMapping("/api/user")
 @CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
-      @Autowired
+    @Autowired
     private UserService userService;
 
     @GetMapping("/{id}")

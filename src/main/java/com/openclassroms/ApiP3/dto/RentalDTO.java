@@ -6,14 +6,14 @@ import lombok.Data;
 
 @Data
 public class RentalDTO {
-   private Integer id;
+    private Integer id;
     private String name;
     private BigDecimal surface;
     private BigDecimal price;
-    private String picture;
+    private byte[] picture;
     private String description;
     private Integer ownerId;
     private String ownerName;
-    private String createdAt;
-    private String updatedAt;
+    private String created_at;
+    private String updated_at;
 }

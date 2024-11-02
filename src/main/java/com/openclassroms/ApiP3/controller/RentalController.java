@@ -1,6 +1,12 @@
 package com.openclassroms.ApiP3.controller;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,11 +18,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.openclassroms.ApiP3.dto.RentalDTO;
 import com.openclassroms.ApiP3.model.Rental;
+import com.openclassroms.ApiP3.model.User;
 import com.openclassroms.ApiP3.service.RentalService;
+import com.openclassroms.ApiP3.service.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/rentals")
@@ -25,10 +37,15 @@ public class RentalController {
     @Autowired
     private RentalService rentalService;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping
-    public ResponseEntity<List<RentalDTO>> getAllRentals() {
+    public ResponseEntity<Map<String, List<RentalDTO>>> getAllRentals() {
         List<RentalDTO> rentals = rentalService.getAllRentals();
-        return ResponseEntity.ok(rentals);
+        Map<String, List<RentalDTO>> response = new HashMap<>();
+        response.put("rentals", rentals);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -41,10 +58,70 @@ public class RentalController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<String> createRental(@RequestBody Rental rental) {
-        rentalService.createRental(rental);
-        return ResponseEntity.ok("{\"message\": \"Rental created !\"}");
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<String> createRental(
+            HttpServletRequest request,
+            @RequestParam("picture") MultipartFile picture,
+            @RequestParam("name") String name,
+            @RequestParam("surface") BigDecimal surface,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("description") String description) {
+
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");
+        }
+
+        token = token.substring(7); // Enlève "Bearer " pour récupérer seulement le token
+
+        String email = null;
+
+        try {
+            // Décodage du payload du token pour extraire l'email
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Invalid token\"}");
+            }
+
+            String payload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+            String[] payloadParts = payload.replace("{", "").replace("}", "").replace("\"", "").split(",");
+
+            for (String part : payloadParts) {
+                String[] keyValue = part.split(":");
+                if (keyValue[0].trim().equals("sub")) {
+                    email = keyValue[1].trim();
+                    break;
+                }
+            }
+
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
+            }
+
+            // Récupère l'utilisateur à partir de l'email
+            User user = userService.findByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
+            }
+
+            // Création d'un nouvel objet Rental et affectation des valeurs
+            Rental rental = new Rental();
+            rental.setName(name);
+            rental.setSurface(surface);
+            rental.setPrice(price);
+            rental.setDescription(description);
+            rental.setPicture(picture.getBytes());
+            rental.setOwner(user); // Définit le propriétaire du Rental comme l'utilisateur récupéré
+
+            // Sauvegarde le Rental avec le service
+            rentalService.createRental(rental);
+            return ResponseEntity.ok("{\"message\": \"Rental created with image!\"}");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"message\": \"Error uploading file\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");
+        }
     }
 
     @PutMapping("/{id}")

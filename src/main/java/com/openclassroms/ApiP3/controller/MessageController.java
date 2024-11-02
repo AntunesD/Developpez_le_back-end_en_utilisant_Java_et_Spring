@@ -17,7 +17,7 @@ import com.openclassroms.ApiP3.service.MessageService;
 @RequestMapping("/api/messages")
 @CrossOrigin(origins = "http://localhost:4200")
 public class MessageController {
- @Autowired
+    @Autowired
     private MessageService messageService;
 
     @PostMapping

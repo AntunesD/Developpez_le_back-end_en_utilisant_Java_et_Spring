@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -21,15 +22,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class Rental {
- @Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private String name;
     private BigDecimal surface;
     private BigDecimal price;
-    private String picture;
-    
+
+    @Lob
+    private byte[] picture;
+
     @Column(length = 2000)
     private String description;
 
