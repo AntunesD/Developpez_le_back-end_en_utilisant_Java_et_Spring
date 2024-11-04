@@ -12,6 +12,8 @@ import com.openclassroms.ApiP3.model.User;
 import com.openclassroms.ApiP3.repository.MessageRepository;
 import com.openclassroms.ApiP3.repository.RentalRepository;
 import com.openclassroms.ApiP3.repository.UserRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MessageService {
@@ -46,5 +48,26 @@ public class MessageService {
 
         // Enregistre le message
         messageRepository.save(message);
+    }
+
+    public List<MessageDTO> getMessagesByUserId(Integer userId) {
+        // Vérifie que l'utilisateur existe
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid User ID"));
+
+        // Récupère les messages pour cet utilisateur
+        List<Message> messages = messageRepository.findByUser(user);
+
+        // Convertit les messages en MessageDTO
+        return messages.stream()
+                .map(message -> {
+                    MessageDTO dto = new MessageDTO();
+                    dto.setId(message.getId()); // Assurez-vous que votre classe Message a une méthode getId
+                    dto.setRental_id(message.getRental().getId());
+                    dto.setUser_id(message.getUser().getId());
+                    dto.setMessage(message.getMessage());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }
