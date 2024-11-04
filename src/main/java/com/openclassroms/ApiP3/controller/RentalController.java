@@ -7,6 +7,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -99,10 +100,13 @@ public class RentalController {
             }
 
             // Récupère l'utilisateur à partir de l'email
-            User user = userService.findByEmail(email);
-            if (user == null) {
+            Optional<User> userOptional = userService.findByEmail(email);
+            if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
             }
+
+            // L'utilisateur existe, on le récupère
+            User user = userOptional.get();
 
             // Création d'un nouvel objet Rental et affectation des valeurs
             Rental rental = new Rental();

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
+import com.openclassroms.ApiP3.model.RegisterResponse;
 import com.openclassroms.ApiP3.model.User;
 import com.openclassroms.ApiP3.repository.UserRepository;
 
@@ -17,11 +18,15 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-
-    public User registerUser(RegisterDTO registerDTO) {
+    public RegisterResponse registerUser(RegisterDTO registerDTO) {
         // Validation basique
         if (registerDTO.getEmail() == null || registerDTO.getName() == null || registerDTO.getPassword() == null) {
             throw new IllegalArgumentException("Email, Name, and Password cannot be null");
+        }
+    
+        // Vérifier si l'email existe déjà
+        if (userRepository.findByEmail(registerDTO.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Cet email est déjà pris. Veuillez en choisir un autre.");
         }
     
         // Conversion du DTO en entité
@@ -31,23 +36,27 @@ public class UserService {
     
         // Cryptage du mot de passe
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        user.setPassword(encoder.encode(registerDTO.getPassword())); // Utilise le mot de passe de RegisterDTO
+        user.setPassword(encoder.encode(registerDTO.getPassword()));
     
         // Définition des dates
         LocalDateTime now = LocalDateTime.now();
         user.setCreated_at(now);
         user.setUpdated_at(now);
     
-        return userRepository.save(user);
+        // Sauvegarder l'utilisateur
+        User savedUser = userRepository.save(user);
+    
+        // Générer le token JWT
+        String token = JwtUtil.generateToken(savedUser.getEmail(), savedUser.getName());
+    
+        // Retourner l'utilisateur et le token encapsulés dans AuthResponse
+        return new RegisterResponse(savedUser, token);
     }
     
 
     public String loginUser(String email, String password) {
-        User user = userRepository.findByEmail(email);
-    
-        if (user == null) {
-            throw new IllegalArgumentException("Invalid email or password");
-        }
+        User user = userRepository.findByEmail(email)
+                                  .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
     
         // Vérifier le mot de passe
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -60,10 +69,10 @@ public class UserService {
     }
     
 
-    public User findByEmail(String email) {
+    public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
-
+    
 
     public UserDTO getUserById(Integer id) {
         Optional<User> userOptional = userRepository.findById(id);

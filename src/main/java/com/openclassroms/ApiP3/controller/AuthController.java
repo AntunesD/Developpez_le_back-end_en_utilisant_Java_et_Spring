@@ -2,6 +2,7 @@ package com.openclassroms.ApiP3.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.openclassroms.ApiP3.dto.LoginDTO;
 import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
+import com.openclassroms.ApiP3.model.RegisterResponse;
 import com.openclassroms.ApiP3.model.User;
 import com.openclassroms.ApiP3.service.JwtUtil;
 import com.openclassroms.ApiP3.service.UserService;
@@ -40,14 +42,15 @@ public class AuthController {
 
     // Endpoint pour l'enregistrement des utilisateurs
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerDTO) { // Change UserDTO en RegisterDTO
+    public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerDTO) {
         try {
-            User user = userService.registerUser(registerDTO); // Passe registerDTO
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+            RegisterResponse authResponse = userService.registerUser(registerDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"message\": \"" + e.getMessage() + "\"}");
         }
     }
+    
 
     // Endpoint pour la connexion des utilisateurs
     @PostMapping("/login")
@@ -102,13 +105,16 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
             }
 
-            User user = userService.findByEmail(email);
+            Optional<User> userOptional = userService.findByEmail(email);
 
             // Vérifier si l'utilisateur existe
-            if (user == null) {
+            if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
             }
-
+            
+            // L'utilisateur existe, on le récupère
+            User user = userOptional.get();
+            
             // Préparer la réponse (sans le mot de passe)
             UserDTO userDTO = new UserDTO();
             userDTO.setId(user.getId());
