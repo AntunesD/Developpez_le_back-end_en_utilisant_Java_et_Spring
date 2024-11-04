@@ -31,7 +31,7 @@ public class Rental {
     private BigDecimal price;
 
     @Lob
-    private byte[] picture;
+    private String picture;
 
     @Column(length = 2000)
     private String description;

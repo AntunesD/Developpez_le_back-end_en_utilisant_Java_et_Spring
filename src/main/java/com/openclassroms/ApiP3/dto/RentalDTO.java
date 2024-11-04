@@ -10,9 +10,9 @@ public class RentalDTO {
     private String name;
     private BigDecimal surface;
     private BigDecimal price;
-    private byte[] picture;
+    private String picture;
     private String description;
-    private Integer ownerId;
+    private Integer owner_id;
     private String ownerName;
     private String created_at;
     private String updated_at;
