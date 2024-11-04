@@ -109,7 +109,21 @@ public class RentalController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateRental(@PathVariable Integer id, @RequestBody Rental rental) {
+    public ResponseEntity<String> updateRental(
+            @PathVariable Integer id,
+            @RequestParam String name,
+            @RequestParam BigDecimal surface,
+            @RequestParam BigDecimal price,
+            @RequestParam String description) {
+        
+        // Créez un nouvel objet Rental à partir des données du formulaire
+        Rental rental = new Rental();
+        rental.setName(name);
+        rental.setSurface(surface);
+        rental.setPrice(price);
+        rental.setDescription(description);
+        
+        // Mettez à jour la location
         Rental updatedRental = rentalService.updateRental(id, rental);
         if (updatedRental != null) {
             return ResponseEntity.ok("{\"message\": \"Rental updated !\"}");
@@ -117,4 +131,5 @@ public class RentalController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
+    
 }

@@ -53,7 +53,6 @@ public class RentalService {
             rental.setName(rentalDetails.getName());
             rental.setSurface(rentalDetails.getSurface());
             rental.setPrice(rentalDetails.getPrice());
-            rental.setPicture(rentalDetails.getPicture());
             rental.setDescription(rentalDetails.getDescription());
             rental.setUpdatedAt(LocalDateTime.now());
             return rentalRepository.save(rental);

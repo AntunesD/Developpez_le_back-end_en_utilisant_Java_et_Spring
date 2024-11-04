@@ -26,14 +26,14 @@ public class MessageService {
 
     public void sendMessage(MessageDTO messageDTO) {
         // Validation basique
-        if (messageDTO.getUserId() == null || messageDTO.getRentalId() == null || messageDTO.getMessage() == null) {
+        if (messageDTO.getUser_id() == null || messageDTO.getRental_id() == null || messageDTO.getMessage() == null) {
             throw new IllegalArgumentException("User ID, Rental ID, and message cannot be null");
         }
 
         // Vérifie que l'utilisateur et la location existent
-        User user = userRepository.findById(messageDTO.getUserId())
+        User user = userRepository.findById(messageDTO.getUser_id())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid User ID"));
-        Rental rental = rentalRepository.findById(messageDTO.getRentalId())
+        Rental rental = rentalRepository.findById(messageDTO.getRental_id())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Rental ID"));
 
         // Crée un nouveau message

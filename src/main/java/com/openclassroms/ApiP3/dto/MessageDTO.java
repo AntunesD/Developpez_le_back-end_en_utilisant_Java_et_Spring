@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class MessageDTO {
     private Integer id;
-    private Integer rentalId;
-    private Integer userId;
+    private Integer rental_id;
+    private Integer user_id;
     private String message;
 }
