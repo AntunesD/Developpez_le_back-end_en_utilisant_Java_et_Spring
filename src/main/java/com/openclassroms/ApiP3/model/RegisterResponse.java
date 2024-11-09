@@ -1,15 +1,15 @@
 package com.openclassroms.ApiP3.model;
 
 public class RegisterResponse {
-    private User user;
+    private AppUser user;
     private String token;
 
-    public RegisterResponse(User user, String token) {
+    public RegisterResponse(AppUser user, String token) {
         this.user = user;
         this.token = token;
     }
 
-    public User getUser() {
+    public AppUser getUser() {
         return user;
     }
 

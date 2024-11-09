@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.openclassroms.ApiP3.dto.RentalDTO;
 import com.openclassroms.ApiP3.model.Rental;
-import com.openclassroms.ApiP3.model.User;
+import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.service.AuthService;
 import com.openclassroms.ApiP3.service.RentalService;
 
@@ -73,7 +73,7 @@ public class RentalController {
             @RequestParam("description") String description) {
 
         String token = request.getHeader("Authorization");
-        Optional<User> userOptional = authService.authenticateAndGetUser(token);
+        Optional<AppUser> userOptional = authService.authenticateAndGetUser(token);
 
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");

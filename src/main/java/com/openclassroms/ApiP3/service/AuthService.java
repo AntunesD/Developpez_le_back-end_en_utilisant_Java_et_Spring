@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.openclassroms.ApiP3.model.User;
+import com.openclassroms.ApiP3.model.AppUser;
 
 @Service
 public class AuthService {
@@ -15,7 +15,7 @@ public class AuthService {
     @Autowired
     private UserService userService;
 
-    public Optional<User> authenticateAndGetUser(String token) {
+    public Optional<AppUser> authenticateAndGetUser(String token) {
         if (token == null || !token.startsWith("Bearer ")) {
             return Optional.empty();
         }

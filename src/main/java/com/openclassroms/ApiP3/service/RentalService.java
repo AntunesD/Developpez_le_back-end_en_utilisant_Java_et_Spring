@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.openclassroms.ApiP3.dto.RentalDTO;
 import com.openclassroms.ApiP3.model.Rental;
-import com.openclassroms.ApiP3.model.User;
+import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.repository.RentalRepository;
 
 @Service
@@ -32,7 +32,7 @@ public class RentalService {
                 .orElse(null); // ou lancer une exception
     }
 
-    public Rental createRental(RentalDTO rentalDTO, User owner) {
+    public Rental createRental(RentalDTO rentalDTO, AppUser owner) {
         Rental rental = new Rental();
         rental.setName(rentalDTO.getName());
         rental.setSurface(rentalDTO.getSurface());

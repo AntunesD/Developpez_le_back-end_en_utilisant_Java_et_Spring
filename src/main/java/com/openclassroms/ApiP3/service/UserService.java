@@ -10,13 +10,20 @@ import org.springframework.stereotype.Service;
 import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
 import com.openclassroms.ApiP3.model.RegisterResponse;
-import com.openclassroms.ApiP3.model.User;
+import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.repository.UserRepository;
 
 @Service
 public class UserService {
     @Autowired
     private UserRepository userRepository;
+
+    private final JWTService jwtService;
+
+    public UserService(UserRepository userRepository, JWTService jwtService) {
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
+    }
 
     public RegisterResponse registerUser(RegisterDTO registerDTO) {
         // Validation basique
@@ -30,7 +37,7 @@ public class UserService {
         }
     
         // Conversion du DTO en entité
-        User user = new User();
+        AppUser user = new AppUser();
         user.setEmail(registerDTO.getEmail());
         user.setName(registerDTO.getName());
     
@@ -44,43 +51,29 @@ public class UserService {
         user.setUpdated_at(now);
     
         // Sauvegarder l'utilisateur
-        User savedUser = userRepository.save(user);
+        AppUser savedUser = userRepository.save(user);
     
-        // Générer le token JWT
-        String token = JwtUtil.generateToken(savedUser.getEmail(), savedUser.getName());
+        // Générer le token JWT via le service
+        String token = "jwtService.generateToken(savedUser)"; // Use the JWTService to generate token
     
         // Retourner l'utilisateur et le token encapsulés dans AuthResponse
         return new RegisterResponse(savedUser, token);
     }
+
     
 
-    public String loginUser(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                                  .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
-    
-        // Vérifier le mot de passe
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        if (!encoder.matches(password, user.getPassword())) {
-            throw new IllegalArgumentException("Invalid email or password");
-        }
-    
-        // Générer le token JWT en utilisant la méthode personnalisée
-        return JwtUtil.generateToken(user.getEmail(), user.getName());
-    }
-    
-
-    public Optional<User> findByEmail(String email) {
+    public Optional<AppUser> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
     
 
     public UserDTO getUserById(Integer id) {
-        Optional<User> userOptional = userRepository.findById(id);
+        Optional<AppUser> userOptional = userRepository.findById(id);
         return userOptional.map(this::convertToDTO).orElse(null); // ou lancer une exception
     }
 
     // Méthode pour convertir un utilisateur en UserDTO
-    private UserDTO convertToDTO(User user) {
+    private UserDTO convertToDTO(AppUser user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setEmail(user.getEmail());

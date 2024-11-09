@@ -28,7 +28,7 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private AppUser user;
 
     @Column(length = 2000)
     private String message;

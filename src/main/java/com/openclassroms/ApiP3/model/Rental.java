@@ -41,7 +41,7 @@ public class Rental {
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    private AppUser owner;
 
     @OneToMany(mappedBy = "rental")
     private List<Message> messages;

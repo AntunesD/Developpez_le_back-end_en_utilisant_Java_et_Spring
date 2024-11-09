@@ -1,16 +1,17 @@
 package com.openclassroms.ApiP3.controller;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Optional;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,9 +24,8 @@ import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.TokenResponseDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
 import com.openclassroms.ApiP3.model.RegisterResponse;
-import com.openclassroms.ApiP3.model.User;
+import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.service.JWTService;
-import com.openclassroms.ApiP3.service.JwtUtil;
 import com.openclassroms.ApiP3.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,7 +48,10 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
 
-    public AuthController(JWTService jwtService, AuthenticationManager authenticationManager) {
+    private final JwtDecoder jwtDecoder; // Injecter le JwtDecoder pour décoder et valider le token JWT
+
+    public AuthController(JwtDecoder jwtDecoder, JWTService jwtService, AuthenticationManager authenticationManager) {
+        this.jwtDecoder = jwtDecoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
     }
@@ -91,53 +94,36 @@ public class AuthController {
     // Endpoint pour récupérer les informations de l'utilisateur connecté
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
-        String token = request.getHeader("Authorization"); // Récupère le header Authorization
+        String token = request.getHeader("Authorization"); // Récupérer le header Authorization
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");
         }
 
         token = token.substring(7); // Suppression du "Bearer "
 
-        // Déclaration des variables pour récupérer les informations
-        String email = null;
-        String name = null;
-
         try {
-            // Décodage du payload du token
-            String[] parts = token.split("\\."); // Séparation du token en parties (header, payload, signature)
+            // Décoder et valider le token
+            Jwt jwt = jwtDecoder.decode(token);
 
-            if (parts.length != 3) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Invalid token\"}");
-            }
-
-            String payload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-
-            // Extraction des informations de l'utilisateur à partir du payload
-            // Par exemple : {"sub":"user@example.com","name":"John Doe","exp":...}
-            String[] payloadParts = payload.replace("{", "").replace("}", "").replace("\"", "").split(",");
-
-            for (String part : payloadParts) {
-                String[] keyValue = part.split(":");
-                if (keyValue[0].trim().equals("sub")) {
-                    email = keyValue[1].trim();
-                } else if (keyValue[0].trim().equals("name")) {
-                    name = keyValue[1].trim();
-                }
-            }
+            // Le sujet (subject) contient l'email ou l'identifiant de l'utilisateur
+            String email = jwt.getSubject();
 
             if (email == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("{\"message\": \"probleme mail User not found\"}");
             }
 
-            Optional<User> userOptional = userService.findByEmail(email);
+            // Récupérer l'utilisateur à partir de son email
+            Optional<AppUser> userOptional = userService.findByEmail(email);
 
             // Vérifier si l'utilisateur existe
             if (userOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("{\"message\": \" Probleme ici User not found\"}");
             }
 
-            // L'utilisateur existe, on le récupère
-            User user = userOptional.get();
+            // L'utilisateur existe, récupérer ses informations
+            AppUser user = userOptional.get();
 
             // Préparer la réponse (sans le mot de passe)
             UserDTO userDTO = new UserDTO();
@@ -148,7 +134,8 @@ public class AuthController {
             userDTO.setUpdated_at(user.getUpdated_at());
 
             return ResponseEntity.ok(userDTO);
-        } catch (Exception e) {
+        } catch (JwtException e) {
+            // En cas d'erreur de décodage ou de validation du JWT
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");
         }
     }

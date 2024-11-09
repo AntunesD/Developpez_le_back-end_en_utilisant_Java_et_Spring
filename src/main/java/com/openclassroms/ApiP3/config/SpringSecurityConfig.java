@@ -1,7 +1,10 @@
 package com.openclassroms.ApiP3.config;
 
+import java.time.LocalDateTime;
+
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,9 +14,9 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -23,9 +26,18 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.openclassroms.ApiP3.model.AppUser;
+import com.openclassroms.ApiP3.repository.UserRepository;
+import com.openclassroms.ApiP3.service.CustomUserDetailsService;
 
 @Configuration
 public class SpringSecurityConfig {
+
+	@Autowired
+	private CustomUserDetailsService customUserDetailsService;
+
+	@Autowired
+	private UserRepository userRepository;
 
 	@Value("${jwt.secret.key}")
 	private String jwtKey;
@@ -39,7 +51,10 @@ public class SpringSecurityConfig {
 		return http.csrf(csrf -> csrf.disable())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/api/auth/login", "/h2-console/**").permitAll() // Autoriser l'accès sans authentification
+						.requestMatchers("/api/auth/login", "/h2-console/**", "/api/auth/register").permitAll() // Autoriser
+																												// l'accès
+																												// sans
+						// authentification
 						.anyRequest().authenticated() // Authentifier les autres requêtes
 				)
 				.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
@@ -59,11 +74,8 @@ public class SpringSecurityConfig {
 	}
 
 	@Bean
-	public UserDetailsService users() {
-		UserDetails user = User.builder().username("user@test.fr").password(passwordEncoder().encode("password"))
-				.roles("USER")
-				.build();
-		return new InMemoryUserDetailsManager(user);
+	public UserDetailsService userDetailsService() {
+		return customUserDetailsService; // Utilise le CustomUserDetailsService
 	}
 
 	@Bean
