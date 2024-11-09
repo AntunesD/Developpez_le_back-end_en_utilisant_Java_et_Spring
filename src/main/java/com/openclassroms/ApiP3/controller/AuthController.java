@@ -4,6 +4,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.openclassroms.ApiP3.dto.LoginDTO;
 import com.openclassroms.ApiP3.dto.RegisterDTO;
+import com.openclassroms.ApiP3.dto.TokenResponseDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
 import com.openclassroms.ApiP3.model.RegisterResponse;
 import com.openclassroms.ApiP3.model.User;
+import com.openclassroms.ApiP3.service.JWTService;
 import com.openclassroms.ApiP3.service.JwtUtil;
 import com.openclassroms.ApiP3.service.UserService;
 
@@ -38,7 +44,14 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JWTService jwtService;
+
+    private final AuthenticationManager authenticationManager;
+
+    public AuthController(JWTService jwtService, AuthenticationManager authenticationManager) {
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
 
     // Endpoint pour l'enregistrement des utilisateurs
     @PostMapping("/register")
@@ -50,17 +63,28 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"message\": \"" + e.getMessage() + "\"}");
         }
     }
-    
 
     // Endpoint pour la connexion des utilisateurs
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginDTO loginRequest) {
         try {
-            String token = userService.loginUser(loginDTO.getEmail(), loginDTO.getPassword());
-            return ResponseEntity.ok().body("{\"token\": \"" + token + "\"}");
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"error\"}");
+            // Création d'un objet d'authentification basé sur les données reçues
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    loginRequest.getEmail(), loginRequest.getPassword());
+
+            // Authentification de l'utilisateur
+            Authentication authentication = authenticationManager.authenticate(authToken);
+
+            // Génération du token JWT après authentification réussie
+            String token = jwtService.generateToken(authentication);
+
+            // Retourner la réponse avec un objet TokenResponseDTO contenant le token
+            return ResponseEntity.ok(new TokenResponseDTO(token));
+
+        } catch (AuthenticationException e) {
+            // Retourne une réponse 401 en cas d'échec d'authentification
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new TokenResponseDTO("Invalid username or password"));
         }
     }
 
@@ -111,10 +135,10 @@ public class AuthController {
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"User not found\"}");
             }
-            
+
             // L'utilisateur existe, on le récupère
             User user = userOptional.get();
-            
+
             // Préparer la réponse (sans le mot de passe)
             UserDTO userDTO = new UserDTO();
             userDTO.setId(user.getId());
