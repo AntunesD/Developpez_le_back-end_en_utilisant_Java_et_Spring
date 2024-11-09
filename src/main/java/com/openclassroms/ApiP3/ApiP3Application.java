@@ -5,13 +5,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.openclassroms.ApiP3.controller.AuthController;
 import com.openclassroms.ApiP3.dto.LoginDTO;
 import com.openclassroms.ApiP3.dto.TokenResponseDTO;
-import com.openclassroms.ApiP3.service.CustomUserDetailsService;
+import com.openclassroms.ApiP3.service.AuthService;
 
 @SpringBootApplication
 public class ApiP3Application {
@@ -20,30 +18,20 @@ public class ApiP3Application {
 		SpringApplication.run(ApiP3Application.class, args);
 	}
 
-	 @Bean
-    CommandLineRunner init(CustomUserDetailsService customUserDetailsService, AuthController authController) {
-        return args -> {
-            // Partie 1 : Vérification de l'utilisateur
-            try {
-                UserDetails user = customUserDetailsService.loadUserByUsername("user1@example.com");
-                System.out.println("User found: " + user);
-            } catch (UsernameNotFoundException e) {
-                System.out.println("Exception caught: " + e.getMessage());
-            }
+	@Bean
+	CommandLineRunner init(AuthController authController) {
+		return args -> {
+			// Créer une instance de LoginDTO avec les informations de connexion
+			LoginDTO loginRequest = new LoginDTO("user1@example.com", "password1");
 
-            // Partie 2 : Simulation de login
-            try {
-                // Crée une instance de LoginDTO avec les informations d'identification
-                LoginDTO loginRequest = new LoginDTO("user1@example.com", "password1");
 
-                // Appelle la méthode login et récupère la réponse
-                ResponseEntity<TokenResponseDTO> response = authController.login(loginRequest);
+            // Afficher le contenu de loginRequest pour vérifier les données
+            System.out.println("Login request: " + loginRequest);
+			// Appeler le endpoint login avec le loginRequest
+			ResponseEntity<TokenResponseDTO> response = authController.login(loginRequest);
 
-                // Affiche la réponse
-                System.out.println("Login response: " + response.getBody().getToken());
-            } catch (Exception e) {
-                System.out.println("Login failed: " + e.getMessage());
-            }
-        };
-    }
+			// Afficher la réponse (le token JWT ou le message d'erreur)
+			System.out.println("Login response: " + response.getBody().getToken());
+		};
+	}
 }

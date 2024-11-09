@@ -1,52 +1,51 @@
 package com.openclassroms.ApiP3.service;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.openclassroms.ApiP3.model.AppUser;
+import com.openclassroms.ApiP3.dto.TokenResponseDTO;
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserService userService;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final PasswordEncoder passwordEncoder;
+    private final JWTService jwtService;  // Service pour générer le JWT
 
-    public Optional<AppUser> authenticateAndGetUser(String token) {
-        if (token == null || !token.startsWith("Bearer ")) {
-            return Optional.empty();
-        }
+    public AuthService(CustomUserDetailsService customUserDetailsService, 
+                       PasswordEncoder passwordEncoder, 
+                       JWTService jwtService) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
 
-        token = token.substring(7); // Enlève "Bearer " pour récupérer seulement le token
-
+    public TokenResponseDTO authenticateUser(String username, String password) {
         try {
-            String[] parts = token.split("\\.");
-            if (parts.length != 3) {
-                return Optional.empty();
+            // 1. Charger l'utilisateur avec le service personnalisé
+            UserDetails user = customUserDetailsService.loadUserByUsername(username);
+
+            // 2. Comparer le mot de passe
+            boolean isPasswordMatch = passwordEncoder.matches(password, user.getPassword());
+
+            if (!isPasswordMatch) {
+                return new TokenResponseDTO("Invalid username or password");
             }
 
-            String payload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-            String[] payloadParts = payload.replace("{", "").replace("}", "").replace("\"", "").split(",");
+            // 3. Créer un objet Authentication
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    user.getUsername(), user.getPassword(), user.getAuthorities());
 
-            String email = null;
-            for (String part : payloadParts) {
-                String[] keyValue = part.split(":");
-                if (keyValue[0].trim().equals("sub")) {
-                    email = keyValue[1].trim();
-                    break;
-                }
-            }
+            // 4. Générer un token JWT
+            String token = jwtService.generateToken(authentication);
 
-            if (email == null) {
-                return Optional.empty();
-            }
-
-            return userService.findByEmail(email);
+            // 5. Retourner le token
+            return new TokenResponseDTO(token);
         } catch (Exception e) {
-            return Optional.empty();
+            return new TokenResponseDTO("Invalid username or password");
         }
     }
 }

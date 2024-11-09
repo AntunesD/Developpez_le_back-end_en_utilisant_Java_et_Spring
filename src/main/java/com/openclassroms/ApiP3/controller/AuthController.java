@@ -5,10 +5,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -23,9 +19,9 @@ import com.openclassroms.ApiP3.dto.LoginDTO;
 import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.TokenResponseDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
-import com.openclassroms.ApiP3.model.RegisterResponse;
 import com.openclassroms.ApiP3.model.AppUser;
-import com.openclassroms.ApiP3.service.JWTService;
+import com.openclassroms.ApiP3.model.RegisterResponse;
+import com.openclassroms.ApiP3.service.AuthService;
 import com.openclassroms.ApiP3.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,17 +39,14 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private JWTService jwtService;
-
-    private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
 
     private final JwtDecoder jwtDecoder; // Injecter le JwtDecoder pour décoder et valider le token JWT
 
-    public AuthController(JwtDecoder jwtDecoder, JWTService jwtService, AuthenticationManager authenticationManager) {
+    public AuthController(JwtDecoder jwtDecoder, AuthService authService ) {
         this.jwtDecoder = jwtDecoder;
-        this.jwtService = jwtService;
-        this.authenticationManager = authenticationManager;
+        this.authService = authService;
+
     }
 
     // Endpoint pour l'enregistrement des utilisateurs
@@ -70,25 +63,15 @@ public class AuthController {
     // Endpoint pour la connexion des utilisateurs
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginDTO loginRequest) {
-        try {
-            // Création d'un objet d'authentification basé sur les données reçues
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    loginRequest.getEmail(), loginRequest.getPassword());
+        // Déléguer l'authentification au service
+        TokenResponseDTO response = authService.authenticateUser(
+                loginRequest.getEmail(), loginRequest.getPassword());
 
-            // Authentification de l'utilisateur
-            Authentication authentication = authenticationManager.authenticate(authToken);
-
-            // Génération du token JWT après authentification réussie
-            String token = jwtService.generateToken(authentication);
-
-            // Retourner la réponse avec un objet TokenResponseDTO contenant le token
-            return ResponseEntity.ok(new TokenResponseDTO(token));
-
-        } catch (AuthenticationException e) {
-            // Retourne une réponse 401 en cas d'échec d'authentification
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new TokenResponseDTO("Invalid username or password"));
+        if (response.getToken().equals("Invalid username or password")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+
+        return ResponseEntity.ok(response);
     }
 
     // Endpoint pour récupérer les informations de l'utilisateur connecté
