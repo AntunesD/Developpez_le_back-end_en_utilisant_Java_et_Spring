@@ -46,10 +46,10 @@ VALUES ('user2@example.com', 'User Two', '$2a$10$DYfMqMUFjDQMukH22WLVBeuEJb7BrUh
 
 -- Insertion de données dans la table RENTALS
 INSERT INTO RENTALS (name, surface, price, picture, description, owner_id, created_at, updated_at)
-VALUES ('Apartment 1', 60.0, 1200.0, 'picture1.jpg', 'Spacious 2-bedroom apartment', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('Apartment 1', 60.0, 1200.0, 'https://www.maisons-balency.fr/wp-content/uploads/2021/10/202112-construction-maisons-balency5-950x430-c-center.jpg', 'Spacious 2-bedroom apartment', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO RENTALS (name, surface, price, picture, description, owner_id, created_at, updated_at)
-VALUES ('Apartment 2', 45.0, 950.0, 'picture2.jpg', 'Cozy studio apartment', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES ('Apartment 2', 45.0, 950.0, 'https://www.villas-melrose.fr/wp-content/uploads/2023/05/quel-prix-maison-haut-gamme-2.jpg', 'Cozy studio apartment', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insertion de données dans la table MESSAGES
 INSERT INTO MESSAGES (rental_id, user_id, message, created_at, updated_at)
