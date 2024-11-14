@@ -1,7 +1,7 @@
 # Développez le back-end en utilisant Java et Spring
 
 Ce projet a été réalisé dans le cadre d'une formation OpenClassrooms. Le but est de développer un back-end en utilisant Java et le framework Spring. Un front-end a été fourni pour ce projet, vous pouvez le récupérer ici :  
-_(insérez l'adresse ici)_
+_([https://github.com/OpenClassrooms-Student-Center/Developpez-le-back-end-en-utilisant-Java-et-Spring](https://github.com/OpenClassrooms-Student-Center/Developpez-le-back-end-en-utilisant-Java-et-Spring))_
 
 ## Installation
 
@@ -10,8 +10,8 @@ _(insérez l'adresse ici)_
 Commencez par cloner le dépôt sur votre machine locale :
 
 ```bash
-git clone <url-du-repo>
-cd <nom-du-repo>
+git clone https://github.com/AntunesD/Developpez_le_back-end_en_utilisant_Java_et_Spring.git
+cd ApiP3
 ```
 
 ### 2. Installer les dépendances
