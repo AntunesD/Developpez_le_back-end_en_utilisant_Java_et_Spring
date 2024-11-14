@@ -34,8 +34,11 @@ import com.openclassroms.ApiP3.model.Rental;
 import com.openclassroms.ApiP3.repository.UserRepository;
 import com.openclassroms.ApiP3.service.RentalService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 
+@Tag(name = "Contrôleur des locations", description = "Gestion des opérations liées aux locations (création, récupération, modification).")
 @RestController
 @RequestMapping("/api/rentals")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -54,6 +57,7 @@ public class RentalController {
     /**
      * @return ResponseEntity<Map<String, List<RentalDTO>>>
      */
+    @Operation(summary = "Récupérer toutes les locations", description = "Permet de récupérer toutes les locations disponibles dans la base de données.")
     @GetMapping
     public ResponseEntity<Map<String, List<RentalDTO>>> getAllRentals() {
         List<RentalDTO> rentals = rentalService.getAllRentals();
@@ -62,6 +66,7 @@ public class RentalController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Récupérer une location par ID", description = "Retourne les détails d'une location spécifiée par son ID.")
     @GetMapping("/{id}")
     public ResponseEntity<RentalDTO> getRentalById(@PathVariable Integer id) {
         RentalDTO rental = rentalService.getRentalById(id);
@@ -72,6 +77,7 @@ public class RentalController {
         }
     }
 
+    @Operation(summary = "Créer une location", description = "Permet de créer une nouvelle location avec une image. L'utilisateur doit être authentifié.")
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<String> createRental(
             HttpServletRequest request,
@@ -128,6 +134,7 @@ public class RentalController {
         }
     }
 
+    @Operation(summary = "Mettre à jour une location", description = "Permet à l'utilisateur propriétaire de mettre à jour les informations d'une location existante.")
     @PutMapping("/{id}")
     public ResponseEntity<String> updateRental(
             @PathVariable Integer id,

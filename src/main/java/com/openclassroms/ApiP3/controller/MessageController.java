@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.openclassroms.ApiP3.dto.MessageDTO;
 import com.openclassroms.ApiP3.service.MessageService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Contrôleur des messages", description = "Gestion des opérations liées aux messages des utilisateurs.")
 @RestController
 @RequestMapping("/api/messages")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -29,6 +33,7 @@ public class MessageController {
      * @return ResponseEntity<?>
      */
     // Méthode existante pour envoyer un message
+    @Operation(summary = "Envoyer un message", description = "Permet à un utilisateur d'envoyer un message. L'utilisateur doit avoir le rôle 'USER'.")
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> sendMessage(@RequestBody MessageDTO messageDTO) {
@@ -43,6 +48,7 @@ public class MessageController {
     }
 
     // Nouvelle méthode pour récupérer les messages par utilisateur
+    @Operation(summary = "Récupérer les messages d'un utilisateur", description = "Retourne tous les messages associés à un utilisateur spécifié par son ID. L'utilisateur doit avoir le rôle 'USER'.")
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getMessagesByUserId(@PathVariable Integer userId) {

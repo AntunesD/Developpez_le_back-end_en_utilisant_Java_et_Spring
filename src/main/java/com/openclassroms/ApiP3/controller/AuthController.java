@@ -22,6 +22,10 @@ import com.openclassroms.ApiP3.repository.UserRepository;
 import com.openclassroms.ApiP3.service.AuthService;
 import com.openclassroms.ApiP3.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Controller d'authentification", description = "On n'y retrouve les routes pour s'authentifier ")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -31,6 +35,7 @@ public class AuthController {
      * @return ResponseEntity<String>
      */
     // Endpoint pour vérifier que l'API fonctionne
+    @Operation(summary = "Testez l'api", description = "C'est un simple get pour s'assurer que l'api fonctionne bien", security = {})
     @GetMapping("/test")
     public ResponseEntity<String> testApi() {
         return ResponseEntity.ok("Votre API est bien fonctionnelle");
@@ -53,6 +58,7 @@ public class AuthController {
      * @param registerDTO
      * @return
      */
+    @Operation(summary = "Enregistrement d'un utilisateur", description = "Permet à un utilisateur de s'inscrire avec un email et un mot de passe.")
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerDTO) {
         try {
@@ -64,6 +70,7 @@ public class AuthController {
     }
 
     // Endpoint pour la connexion des utilisateurs
+    @Operation(summary = "Connexion d'un utilisateur", description = "Permet à un utilisateur de se connecter avec son email et mot de passe et obtenir un token JWT.")
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginDTO loginRequest) {
         // Déléguer l'authentification au service
@@ -78,6 +85,7 @@ public class AuthController {
     }
 
     // Endpoint pour récupérer les informations de l'utilisateur connecté
+    @Operation(summary = "Récupérer les informations de l'utilisateur connecté", description = "Retourne les détails de l'utilisateur actuellement connecté en utilisant le token JWT.")
     @GetMapping("/me")
     public UserDTO getCurrentUser() {
         // Récupérer l'objet Authentication à partir du contexte de sécurité

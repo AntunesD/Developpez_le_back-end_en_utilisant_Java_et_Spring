@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Contrôleur des images", description = "Gestion des opérations liées aux images (récupération des images).")
 @RestController
 public class ImageController {
     private final String IMAGE_DIR = "src/main/resources/static/uploads/images/";
@@ -22,6 +26,7 @@ public class ImageController {
      * @param filename
      * @return ResponseEntity<Resource>
      */
+    @Operation(summary = "Récupérer une image", description = "Permet de récupérer une image à partir de son nom de fichier. Le fichier est servi avec son type MIME correspondant.")
     @GetMapping("/uploads/images/{filename:.+}")
     public ResponseEntity<Resource> getImage(@PathVariable String filename) {
         File file = new File(IMAGE_DIR + filename);
