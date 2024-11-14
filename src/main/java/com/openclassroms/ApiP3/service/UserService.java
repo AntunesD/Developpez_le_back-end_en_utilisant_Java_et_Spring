@@ -27,6 +27,10 @@ public class UserService {
         this.jwtService = jwtService;
     }
 
+    /**
+     * @param registerDTO
+     * @return RegisterResponse
+     */
     public RegisterResponse registerUser(RegisterDTO registerDTO) {
         // Validation basique
         if (registerDTO.getEmail() == null || registerDTO.getName() == null || registerDTO.getPassword() == null) {
@@ -66,8 +70,6 @@ public class UserService {
         // Retourner l'utilisateur et le token encapsulés dans AuthResponse
         return new RegisterResponse(savedUser, token);
     }
-
-
 
     public UserDTO getUserById(Integer id) {
         Optional<AppUser> userOptional = userRepository.findById(id);

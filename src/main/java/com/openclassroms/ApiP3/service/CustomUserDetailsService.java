@@ -17,6 +17,11 @@ public class CustomUserDetailsService implements org.springframework.security.co
         this.userRepository = userRepository;
     }
 
+    /**
+     * @param email
+     * @return UserDetails
+     * @throws UsernameNotFoundException
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         // Cherche l'utilisateur par son email
@@ -27,7 +32,8 @@ public class CustomUserDetailsService implements org.springframework.security.co
         return User.builder()
                 .username(appUser.getEmail()) // Utilise l'email comme nom d'utilisateur
                 .password(appUser.getPassword()) // Utilise le mot de passe de l'entité AppUser
-                .roles("USER") // Tu peux ajouter des rôles dynamiquement si tu as une logique basée sur tes données
+                .roles("USER") // Tu peux ajouter des rôles dynamiquement si tu as une logique basée sur tes
+                               // données
                 .build();
     }
 }

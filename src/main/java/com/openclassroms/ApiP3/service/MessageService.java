@@ -1,19 +1,19 @@
 package com.openclassroms.ApiP3.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.openclassroms.ApiP3.dto.MessageDTO;
+import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.model.Message;
 import com.openclassroms.ApiP3.model.Rental;
-import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.repository.MessageRepository;
 import com.openclassroms.ApiP3.repository.RentalRepository;
 import com.openclassroms.ApiP3.repository.UserRepository;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MessageService {
@@ -26,6 +26,9 @@ public class MessageService {
     @Autowired
     private RentalRepository rentalRepository;
 
+    /**
+     * @param messageDTO
+     */
     public void sendMessage(MessageDTO messageDTO) {
         // Validation basique
         if (messageDTO.getUser_id() == null || messageDTO.getRental_id() == null || messageDTO.getMessage() == null) {

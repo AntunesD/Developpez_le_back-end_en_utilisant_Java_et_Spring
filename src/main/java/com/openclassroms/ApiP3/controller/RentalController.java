@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,9 @@ public class RentalController {
 
     private final String IMAGE_DIR = "src/main/resources/static/uploads/images/";
 
+    /**
+     * @return ResponseEntity<Map<String, List<RentalDTO>>>
+     */
     @GetMapping
     public ResponseEntity<Map<String, List<RentalDTO>>> getAllRentals() {
         List<RentalDTO> rentals = rentalService.getAllRentals();
@@ -130,21 +134,41 @@ public class RentalController {
             @RequestParam String name,
             @RequestParam BigDecimal surface,
             @RequestParam BigDecimal price,
-            @RequestParam String description) {
+            @RequestParam String description,
+            Principal principal) { // Injecte l'utilisateur authentifié
 
-        // Créez un nouvel objet Rental à partir des données du formulaire
-        Rental rental = new Rental();
+        // Récupérer l'utilisateur actuellement connecté via son nom d'utilisateur
+        Optional<AppUser> userOptional = userRepository.findByEmail(principal.getName());
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"Unauthorized\"}");
+        }
+        AppUser currentUser = userOptional.get();
+
+        // Récupérer la location en base de données
+        Rental rental = rentalService.findById(id);
+        if (rental == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"message\": \"Rental not found\"}");
+        }
+
+        // Vérifier si l'utilisateur actuel est bien le propriétaire de la location
+        if (!rental.getOwner().getId().equals(currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("{\"message\": \"You are not authorized to update this rental\"}");
+        }
+
+        // Mettre à jour les champs de la location
         rental.setName(name);
         rental.setSurface(surface);
         rental.setPrice(price);
         rental.setDescription(description);
 
-        // Mettez à jour la location
+        // Enregistrer les modifications
         Rental updatedRental = rentalService.updateRental(id, rental);
         if (updatedRental != null) {
-            return ResponseEntity.ok("{\"message\": \"Rental updated !\"}");
+            return ResponseEntity.ok("{\"message\": \"Rental updated!\"}");
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"message\": \"Failed to update rental\"}");
         }
     }
 

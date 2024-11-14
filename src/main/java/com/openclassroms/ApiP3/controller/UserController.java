@@ -19,6 +19,10 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    /**
+     * @param id
+     * @return ResponseEntity<UserDTO>
+     */
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id) {
         UserDTO user = userService.getUserById(id);

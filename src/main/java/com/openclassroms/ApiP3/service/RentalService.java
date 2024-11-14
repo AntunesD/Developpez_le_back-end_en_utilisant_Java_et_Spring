@@ -9,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.openclassroms.ApiP3.dto.RentalDTO;
-import com.openclassroms.ApiP3.model.Rental;
 import com.openclassroms.ApiP3.model.AppUser;
+import com.openclassroms.ApiP3.model.Rental;
 import com.openclassroms.ApiP3.repository.RentalRepository;
 
 @Service
@@ -19,6 +19,20 @@ public class RentalService {
     private RentalRepository rentalRepository;
 
     private final String IMAGE_BASE_URL = "http://localhost:8080/uploads/images/";
+
+    public RentalService(RentalRepository rentalRepository) {
+        this.rentalRepository = rentalRepository;
+    }
+
+    /**
+     * @param id
+     * @return Rental
+     */
+    public Rental findById(Integer id) {
+        // Utilise findById du repository qui retourne un Optional<Rental>
+        return rentalRepository.findById(id)
+                .orElse(null); // Retourne null si la location n'est pas trouvée
+    }
 
     public List<RentalDTO> getAllRentals() {
         return rentalRepository.findAll().stream()

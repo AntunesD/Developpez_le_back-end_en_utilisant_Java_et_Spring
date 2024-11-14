@@ -18,11 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class ImageController {
     private final String IMAGE_DIR = "src/main/resources/static/uploads/images/";
 
+    /**
+     * @param filename
+     * @return ResponseEntity<Resource>
+     */
     @GetMapping("/uploads/images/{filename:.+}")
     public ResponseEntity<Resource> getImage(@PathVariable String filename) {
         File file = new File(IMAGE_DIR + filename);
         Resource resource = new FileSystemResource(file);
-        
+
         if (!resource.exists()) {
             return ResponseEntity.notFound().build();
         }
@@ -32,7 +36,7 @@ public class ImageController {
             MediaType mediaType = MediaType.parseMediaType(Files.probeContentType(file.toPath()));
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(mediaType);
-            
+
             return ResponseEntity.ok()
                     .headers(headers)
                     .body(resource);

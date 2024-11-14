@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class ApiP3Application {
 
+	/**
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		SpringApplication.run(ApiP3Application.class, args);
 	}

@@ -13,16 +13,21 @@ public class AuthService {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoder passwordEncoder;
-    private final JWTService jwtService;  // Service pour générer le JWT
+    private final JWTService jwtService; // Service pour générer le JWT
 
-    public AuthService(CustomUserDetailsService customUserDetailsService, 
-                       PasswordEncoder passwordEncoder, 
-                       JWTService jwtService) {
+    public AuthService(CustomUserDetailsService customUserDetailsService,
+            PasswordEncoder passwordEncoder,
+            JWTService jwtService) {
         this.customUserDetailsService = customUserDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
 
+    /**
+     * @param username
+     * @param password
+     * @return TokenResponseDTO
+     */
     public TokenResponseDTO authenticateUser(String username, String password) {
         try {
             // 1. Charger l'utilisateur avec le service personnalisé

@@ -9,6 +9,9 @@ public class RegisterResponse {
         this.token = token;
     }
 
+    /**
+     * @return AppUser
+     */
     public AppUser getUser() {
         return user;
     }

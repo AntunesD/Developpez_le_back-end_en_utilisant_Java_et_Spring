@@ -26,6 +26,10 @@ import com.openclassroms.ApiP3.service.UserService;
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
+
+    /**
+     * @return ResponseEntity<String>
+     */
     // Endpoint pour vérifier que l'API fonctionne
     @GetMapping("/test")
     public ResponseEntity<String> testApi() {
@@ -43,7 +47,12 @@ public class AuthController {
         this.userRepository = userRepository;
     }
 
-    // Endpoint pour l'enregistrement des utilisateurs
+    /**
+     * Endpoint pour l'enregistrement des utilisateurs
+     * 
+     * @param registerDTO
+     * @return
+     */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerDTO) {
         try {
@@ -81,7 +90,8 @@ public class AuthController {
         // Extraire le nom de l'utilisateur (qui est le sujet du token)
         String username = authentication.getName();
 
-        // Rechercher l'utilisateur dans la base de données en fonction de son email ou username
+        // Rechercher l'utilisateur dans la base de données en fonction de son email ou
+        // username
         AppUser user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
 
