@@ -16,6 +16,8 @@ import com.openclassroms.ApiP3.dto.LoginDTO;
 import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.TokenResponseDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
+import com.openclassroms.ApiP3.mapper.UserMapper;
+import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.model.RegisterResponse;
 import com.openclassroms.ApiP3.service.AuthService;
 import com.openclassroms.ApiP3.service.UserService;
@@ -31,7 +33,10 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+    @Autowired
     private AuthService authService;
+    @Autowired
+    private UserMapper userMapper;  // Injection du UserMapper
 
     /**
      * Endpoint pour l'enregistrement des utilisateurs
@@ -50,7 +55,6 @@ public class AuthController {
     @Operation(summary = "Connexion d'un utilisateur", description = "Permet à un utilisateur de se connecter avec son email et mot de passe et obtenir un token JWT.")
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginDTO loginRequest) {
-        // Déléguer l'authentification au service
         TokenResponseDTO response = authService.authenticateUser(
                 loginRequest.getEmail(), loginRequest.getPassword());
 
@@ -64,15 +68,21 @@ public class AuthController {
     // Endpoint pour récupérer les informations de l'utilisateur connecté
     @Operation(summary = "Récupérer les informations de l'utilisateur connecté", description = "Retourne les détails de l'utilisateur actuellement connecté en utilisant le token JWT.")
     @GetMapping("/me")
-    public UserDTO getCurrentUser() {
+    public ResponseEntity<UserDTO> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
-            throw new IllegalStateException("No authentication information available");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String username = authentication.getName();
-        return userService.getCurrentUser(username);
-    }
+        AppUser currentUser = userService.getCurrentUser(username);
 
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        UserDTO userDTO = userMapper.toDto(currentUser);  // Utilisation du UserMapper
+        return ResponseEntity.ok(userDTO);
+    }
 }

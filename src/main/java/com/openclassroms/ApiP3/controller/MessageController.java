@@ -1,6 +1,7 @@
 package com.openclassroms.ApiP3.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.openclassroms.ApiP3.dto.MessageDTO;
-import com.openclassroms.ApiP3.dto.MessageResponseDTO; // Import du DTO de réponse
+import com.openclassroms.ApiP3.dto.MessageResponseDTO;
+import com.openclassroms.ApiP3.mapper.MessageMapper;
+import com.openclassroms.ApiP3.model.Message;
 import com.openclassroms.ApiP3.service.MessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +31,9 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
 
+    @Autowired
+    private MessageMapper messageMapper;
+
     /**
      * Envoie un message.
      *
@@ -37,7 +43,8 @@ public class MessageController {
     @Operation(summary = "Envoyer un message", description = "Permet à un utilisateur d'envoyer un message. L'utilisateur doit avoir le rôle 'USER'.")
     @PostMapping
     public ResponseEntity<MessageResponseDTO> sendMessage(@RequestBody MessageDTO messageDTO) {
-        messageService.sendMessage(messageDTO);
+        Message message = messageMapper.toEntity(messageDTO); // Utilisation du MessageMapper
+        messageService.sendMessage(message);
         // Retourne la réponse sous forme d'un DTO
         MessageResponseDTO response = new MessageResponseDTO("Message sent with success");
         return ResponseEntity.ok(response);
@@ -52,7 +59,11 @@ public class MessageController {
     @Operation(summary = "Récupérer les messages d'un utilisateur", description = "Retourne tous les messages associés à un utilisateur spécifié par son ID. L'utilisateur doit avoir le rôle 'USER'.")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<MessageDTO>> getMessagesByUserId(@PathVariable Integer userId) {
-        List<MessageDTO> messages = messageService.getMessagesByUserId(userId);
-        return ResponseEntity.ok(messages);
+        List<Message> messages = messageService.getMessagesByUserId(userId);
+        // Conversion des entités Message en MessageDTO
+        List<MessageDTO> messageDTOs = messages.stream()
+                .map(messageMapper::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(messageDTOs);
     }
 }

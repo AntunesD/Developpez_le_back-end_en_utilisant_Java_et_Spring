@@ -10,7 +10,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -18,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.openclassroms.ApiP3.dto.RentalDTO;
 import com.openclassroms.ApiP3.exception.EntityNotFoundException;
 import com.openclassroms.ApiP3.exception.ForbiddenException;
 import com.openclassroms.ApiP3.exception.UnauthorizedException;
@@ -36,8 +34,8 @@ public class RentalService {
     @Value("${app.image-base-url}")
     private String imageBaseUrl;
 
-    private RentalRepository rentalRepository;
-    private UserRepository userRepository;
+    private final RentalRepository rentalRepository;
+    private final UserRepository userRepository;
 
     public RentalService(RentalRepository rentalRepository, UserRepository userRepository) {
         this.rentalRepository = rentalRepository;
@@ -45,57 +43,66 @@ public class RentalService {
     }
 
     /**
-     * @param id
-     * @return Rental
+     * Trouver une location par son ID.
+     *
+     * @param id l'ID de la location
+     * @return Rental ou null si non trouvé
      */
     public Rental findById(Integer id) {
-        // Utilise findById du repository qui retourne un Optional<Rental>
-        return rentalRepository.findById(id)
-                .orElse(null); // Retourne null si la location n'est pas trouvée
+        return rentalRepository.findById(id).orElse(null); // Retourne null si la location n'est pas trouvée
     }
 
-    public List<RentalDTO> getAllRentals() {
-        return rentalRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    /**
+     * Récupérer toutes les locations.
+     *
+     * @return Liste des locations
+     */
+    public List<Rental> getAllRentals() {
+        return rentalRepository.findAll();
     }
 
-    public RentalDTO getRentalById(Integer id) {
-        return rentalRepository.findById(id)
-                .map(this::convertToDTO)
-                .orElse(null); // ou lancer une exception
-    }
-
+    /**
+     * Créer une nouvelle location.
+     *
+     * @param picture     l'image associée à la location
+     * @param name        le nom de la location
+     * @param surface     la surface de la location
+     * @param price       le prix de la location
+     * @param description la description de la location
+     */
     public void handleCreateRental(MultipartFile picture, String name, BigDecimal surface, BigDecimal price,
             String description) {
-    try {
-        // Vérifier l'utilisateur authentifié
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalArgumentException("User not authenticated");
+        try {
+            // Vérifier l'utilisateur authentifié
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new IllegalArgumentException("User not authenticated");
+            }
+
+            String username = authentication.getName();
+            AppUser user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Gérer l'image
+            String imageFileName = saveImageToFileSystem(picture);
+
+            // Créer l'objet Rental et l'enregistrer
+            Rental rental = new Rental();
+            rental.setName(name);
+            rental.setSurface(surface);
+            rental.setPrice(price);
+            rental.setDescription(description);
+            rental.setPicture(imageBaseUrl + imageFileName);
+            rental.setOwner(user);
+            rental.setCreatedAt(LocalDateTime.now());
+            rental.setUpdatedAt(LocalDateTime.now());
+
+            rentalRepository.save(rental);
+
+        } catch (IOException e) {
+            throw new IllegalStateException("Error while saving the image", e); // Gestion d'erreur générique
         }
-
-        String username = authentication.getName();
-        AppUser user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        // Gérer le fichier image
-        String imageFileName = saveImageToFileSystem(picture);
-
-        // Créer l'objet RentalDTO
-        RentalDTO rentalDTO = new RentalDTO();
-        rentalDTO.setName(name);
-        rentalDTO.setSurface(surface);
-        rentalDTO.setPrice(price);
-        rentalDTO.setDescription(description);
-        rentalDTO.setPicture(imageFileName);
-
-        // Créer la location
-        createRental(rentalDTO, user);
-    } catch (IOException e) {
-        throw new IllegalStateException("Error while saving the image", e); // Exception générique gérée dans le GlobalExceptionHandler
     }
-}
 
     private String saveImageToFileSystem(MultipartFile picture) throws IOException {
         // Créer le répertoire si nécessaire
@@ -112,20 +119,19 @@ public class RentalService {
         return imageFileName;
     }
 
-    public Rental createRental(RentalDTO rentalDTO, AppUser owner) {
-        Rental rental = new Rental();
-        rental.setName(rentalDTO.getName());
-        rental.setSurface(rentalDTO.getSurface());
-        rental.setPrice(rentalDTO.getPrice());
-        rental.setDescription(rentalDTO.getDescription());
-        rental.setPicture(imageBaseUrl + rentalDTO.getPicture()); // Utiliser l'URL complète de l'image
-        rental.setOwner(owner);
-        rental.setCreatedAt(LocalDateTime.now());
-        rental.setUpdatedAt(LocalDateTime.now());
-
-        return rentalRepository.save(rental);
-    }
-
+    /**
+     * Mettre à jour une location existante.
+     *
+     * @param id          l'ID de la location
+     * @param name        le nouveau nom
+     * @param surface     la nouvelle surface
+     * @param price       le nouveau prix
+     * @param description la nouvelle description
+     * @param email       l'email de l'utilisateur authentifié
+     * @throws UnauthorizedException   si l'utilisateur n'est pas authentifié
+     * @throws EntityNotFoundException si la location n'est pas trouvée
+     * @throws ForbiddenException      si l'utilisateur n'est pas le propriétaire
+     */
     public void updateRentalByOwner(Integer id, String name, BigDecimal surface, BigDecimal price, String description,
             String email)
             throws UnauthorizedException, EntityNotFoundException, ForbiddenException {
@@ -142,7 +148,7 @@ public class RentalService {
             throw new ForbiddenException("You are not authorized to update this rental");
         }
 
-        // Mettre à jour les champs
+        // Mettre à jour les informations
         rental.setName(name);
         rental.setSurface(surface);
         rental.setPrice(price);
@@ -153,6 +159,13 @@ public class RentalService {
         rentalRepository.save(rental);
     }
 
+    /**
+     * Mise à jour d'une location avec de nouvelles données.
+     *
+     * @param id            l'ID de la location
+     * @param rentalDetails les nouvelles données pour la location
+     * @return Rental ou null si non trouvé
+     */
     public Rental updateRental(Integer id, Rental rentalDetails) {
         Optional<Rental> optionalRental = rentalRepository.findById(id);
         if (optionalRental.isPresent()) {
@@ -164,24 +177,6 @@ public class RentalService {
             rental.setUpdatedAt(LocalDateTime.now());
             return rentalRepository.save(rental);
         }
-        return null; // ou lancer une exception
-    }
-
-    private RentalDTO convertToDTO(Rental rental) {
-        RentalDTO dto = new RentalDTO();
-        dto.setId(rental.getId());
-        dto.setName(rental.getName());
-        dto.setSurface(rental.getSurface());
-        dto.setPrice(rental.getPrice());
-        dto.setPicture(rental.getPicture());
-        dto.setDescription(rental.getDescription());
-        // Récupérer l'ID et le nom du propriétaire
-        if (rental.getOwner() != null) {
-            dto.setOwner_id(rental.getOwner().getId()); // Récupérer l'ID du propriétaire
-            dto.setOwnerName(rental.getOwner().getName()); // Récupérer le nom du propriétaire
-        }
-        dto.setCreated_at(rental.getCreatedAt().toString());
-        dto.setUpdated_at(rental.getUpdatedAt().toString());
-        return dto;
+        return null; // ou lancer une exception si nécessaire
     }
 }

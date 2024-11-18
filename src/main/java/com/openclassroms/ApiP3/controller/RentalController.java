@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +19,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.openclassroms.ApiP3.dto.MessageResponseDTO; // Import du DTO de réponse
+import com.openclassroms.ApiP3.dto.MessageResponseDTO;
 import com.openclassroms.ApiP3.dto.RentalDTO;
+import com.openclassroms.ApiP3.mapper.RentalMapper;
+import com.openclassroms.ApiP3.model.Rental;
 import com.openclassroms.ApiP3.service.RentalService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,43 +37,31 @@ public class RentalController {
     @Autowired
     private RentalService rentalService;
 
-    /**
-     * Récupérer toutes les locations.
-     *
-     * @return ResponseEntity avec toutes les locations.
-     */
+    @Autowired
+    private RentalMapper rentalMapper; // Injection du mapper
+
     @Operation(summary = "Récupérer toutes les locations", description = "Permet de récupérer toutes les locations disponibles dans la base de données.")
     @GetMapping
     public ResponseEntity<Map<String, List<RentalDTO>>> getAllRentals() {
-        List<RentalDTO> rentals = rentalService.getAllRentals();
+        List<RentalDTO> rentals = rentalService.getAllRentals().stream()
+                .map(rentalMapper::toDto) // Conversion en DTO
+                .collect(Collectors.toList());
         Map<String, List<RentalDTO>> response = new HashMap<>();
         response.put("rentals", rentals);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Récupérer une location par ID.
-     *
-     * @param id L'ID de la location.
-     * @return ResponseEntity avec la location.
-     */
     @Operation(summary = "Récupérer une location par ID", description = "Retourne les détails d'une location spécifiée par son ID.")
     @GetMapping("/{id}")
     public ResponseEntity<RentalDTO> getRentalById(@PathVariable Integer id) {
-        RentalDTO rental = rentalService.getRentalById(id);
-        return rental != null ? ResponseEntity.ok(rental) : ResponseEntity.notFound().build();
+        Rental rental = rentalService.findById(id);
+        if (rental != null) {
+            RentalDTO rentalDTO = rentalMapper.toDto(rental); // Conversion en DTO
+            return ResponseEntity.ok(rentalDTO);
+        }
+        return ResponseEntity.notFound().build();
     }
 
-    /**
-     * Créer une nouvelle location.
-     *
-     * @param picture     L'image de la location.
-     * @param name        Le nom de la location.
-     * @param surface     La surface de la location.
-     * @param price       Le prix de la location.
-     * @param description La description de la location.
-     * @return ResponseEntity avec un message de succès.
-     */
     @Operation(summary = "Créer une location", description = "Permet de créer une nouvelle location avec une image. L'utilisateur doit être authentifié.")
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<MessageResponseDTO> createRental(
@@ -81,22 +72,10 @@ public class RentalController {
             @RequestParam("description") String description) {
 
         rentalService.handleCreateRental(picture, name, surface, price, description);
-        // Retourne la réponse sous forme d'un DTO
         MessageResponseDTO response = new MessageResponseDTO("Rental created with image!");
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Mettre à jour une location.
-     *
-     * @param id          L'ID de la location à mettre à jour.
-     * @param name        Le nom de la location.
-     * @param surface     La surface de la location.
-     * @param price       Le prix de la location.
-     * @param description La description de la location.
-     * @param principal   L'utilisateur qui effectue la mise à jour.
-     * @return ResponseEntity avec un message de succès ou d'erreur.
-     */
     @Operation(summary = "Mettre à jour une location", description = "Permet à l'utilisateur propriétaire de mettre à jour les informations d'une location existante.")
     @PutMapping("/{id}")
     public ResponseEntity<MessageResponseDTO> updateRental(
@@ -108,7 +87,6 @@ public class RentalController {
             Principal principal) {
 
         rentalService.updateRentalByOwner(id, name, surface, price, description, principal.getName());
-        // Retourne la réponse sous forme d'un DTO
         MessageResponseDTO response = new MessageResponseDTO("Rental updated!");
         return ResponseEntity.ok(response);
     }

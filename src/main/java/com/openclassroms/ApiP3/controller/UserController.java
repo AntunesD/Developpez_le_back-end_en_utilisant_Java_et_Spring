@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.openclassroms.ApiP3.dto.UserDTO;
+import com.openclassroms.ApiP3.mapper.UserMapper;
+import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,8 +21,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/user")
 @CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
+
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserMapper userMapper; // Injection du UserMapper
 
     /**
      * @param id
@@ -29,7 +34,13 @@ public class UserController {
     @Operation(summary = "Récupérer un utilisateur par ID", description = "Retourne les informations d'un utilisateur spécifié par son ID.")
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id) {
-        UserDTO user = userService.getUserById(id);
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+        AppUser user = userService.getUserById(id);
+
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserDTO userDTO = userMapper.toDto(user); // Utilisation du UserMapper
+        return ResponseEntity.ok(userDTO);
     }
 }

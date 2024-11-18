@@ -6,6 +6,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class RegisterResponse {
-    private AppUser user;
     private String token;
 }
