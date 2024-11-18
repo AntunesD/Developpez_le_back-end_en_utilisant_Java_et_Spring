@@ -35,13 +35,6 @@ public class SpringSecurityConfig {
 	@Value("${jwt.secret.key}")
 	private String jwtKey;
 
-	/**
-	 * @return String
-	 */
-	public String getJwtKey() {
-		return jwtKey;
-	}
-
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		return http.csrf(csrf -> csrf.disable())

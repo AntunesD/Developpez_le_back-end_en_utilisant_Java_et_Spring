@@ -16,9 +16,7 @@ import com.openclassroms.ApiP3.dto.LoginDTO;
 import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.TokenResponseDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
-import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.model.RegisterResponse;
-import com.openclassroms.ApiP3.repository.UserRepository;
 import com.openclassroms.ApiP3.service.AuthService;
 import com.openclassroms.ApiP3.service.UserService;
 
@@ -31,26 +29,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
-    /**
-     * @return ResponseEntity<String>
-     */
-    // Endpoint pour vérifier que l'API fonctionne
-    @Operation(summary = "Testez l'api", description = "C'est un simple get pour s'assurer que l'api fonctionne bien", security = {})
-    @GetMapping("/test")
-    public ResponseEntity<String> testApi() {
-        return ResponseEntity.ok("Votre API est bien fonctionnelle");
-    }
-
     @Autowired
     private UserService userService;
-
-    private final AuthService authService;
-    private final UserRepository userRepository;
-
-    public AuthController(UserRepository userRepository, AuthService authService) {
-        this.authService = authService;
-        this.userRepository = userRepository;
-    }
+    private AuthService authService;
 
     /**
      * Endpoint pour l'enregistrement des utilisateurs
@@ -98,21 +79,8 @@ public class AuthController {
         // Extraire le nom de l'utilisateur (qui est le sujet du token)
         String username = authentication.getName();
 
-        // Rechercher l'utilisateur dans la base de données en fonction de son email ou
-        // username
-        AppUser user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
-
-        // Créer un DTO à partir de l'utilisateur
-        UserDTO userDTO = new UserDTO();
-        userDTO.setId(user.getId());
-        userDTO.setEmail(user.getEmail());
-        userDTO.setName(user.getName());
-        userDTO.setCreated_at(user.getCreated_at());
-        userDTO.setUpdated_at(user.getUpdated_at());
-
-        // Retourner le DTO de l'utilisateur
-        return userDTO;
+        // Appeler le service pour récupérer les informations de l'utilisateur
+        return userService.getCurrentUser(username);
     }
 
 }

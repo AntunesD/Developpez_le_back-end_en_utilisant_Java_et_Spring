@@ -87,4 +87,19 @@ public class UserService {
         return dto;
     }
 
+    public UserDTO getCurrentUser(String username) {
+        // Rechercher l'utilisateur dans la base de données
+        AppUser user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+
+        // Mapper l'utilisateur en DTO
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setName(user.getName());
+        userDTO.setCreated_at(user.getCreated_at());
+        userDTO.setUpdated_at(user.getUpdated_at());
+
+        return userDTO;
+    }
 }
