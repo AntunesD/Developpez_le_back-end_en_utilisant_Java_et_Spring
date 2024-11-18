@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +36,6 @@ public class MessageController {
      */
     @Operation(summary = "Envoyer un message", description = "Permet à un utilisateur d'envoyer un message. L'utilisateur doit avoir le rôle 'USER'.")
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<MessageResponseDTO> sendMessage(@RequestBody MessageDTO messageDTO) {
         messageService.sendMessage(messageDTO);
         // Retourne la réponse sous forme d'un DTO
@@ -53,7 +51,6 @@ public class MessageController {
      */
     @Operation(summary = "Récupérer les messages d'un utilisateur", description = "Retourne tous les messages associés à un utilisateur spécifié par son ID. L'utilisateur doit avoir le rôle 'USER'.")
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<MessageDTO>> getMessagesByUserId(@PathVariable Integer userId) {
         List<MessageDTO> messages = messageService.getMessagesByUserId(userId);
         return ResponseEntity.ok(messages);
