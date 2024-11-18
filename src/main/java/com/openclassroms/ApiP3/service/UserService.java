@@ -3,7 +3,6 @@ package com.openclassroms.ApiP3.service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,13 +10,15 @@ import org.springframework.stereotype.Service;
 
 import com.openclassroms.ApiP3.dto.RegisterDTO;
 import com.openclassroms.ApiP3.dto.UserDTO;
+import com.openclassroms.ApiP3.exception.EmailAlreadyUsedException;
+import com.openclassroms.ApiP3.exception.InvalidInputException;
 import com.openclassroms.ApiP3.model.AppUser;
 import com.openclassroms.ApiP3.model.RegisterResponse;
 import com.openclassroms.ApiP3.repository.UserRepository;
 
 @Service
 public class UserService {
-    @Autowired
+
     private UserRepository userRepository;
 
     private final JWTService jwtService;
@@ -34,12 +35,12 @@ public class UserService {
     public RegisterResponse registerUser(RegisterDTO registerDTO) {
         // Validation basique
         if (registerDTO.getEmail() == null || registerDTO.getName() == null || registerDTO.getPassword() == null) {
-            throw new IllegalArgumentException("Email, Name, and Password cannot be null");
+            throw new InvalidInputException("Email, Name, and Password cannot be null");
         }
 
         // Vérifier si l'email existe déjà
         if (userRepository.findByEmail(registerDTO.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Cet email est déjà pris. Veuillez en choisir un autre.");
+            throw new EmailAlreadyUsedException("Cet email est déjà pris. Veuillez en choisir un autre.");
         }
 
         // Conversion du DTO en entité

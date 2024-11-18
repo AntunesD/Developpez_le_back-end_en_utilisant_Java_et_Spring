@@ -1,12 +1,10 @@
 package com.openclassroms.ApiP3.controller;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,21 +28,18 @@ public class ImageController {
 
     @Operation(summary = "Récupérer une image", description = "Permet de récupérer une image à partir de son nom de fichier. Le fichier est servi avec son type MIME correspondant.")
     @GetMapping("/uploads/images/{filename:.+}")
-    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
-        try {
-            Resource resource = imageService.getImageResource(filename);
-            MediaType mediaType = imageService.getMediaType(new File(resource.getFile().getPath()));
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(mediaType);
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(resource);
-        } catch (FileNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) throws FileNotFoundException, IOException {
+        Resource resource = imageService.getImageResource(filename);
+        if (resource == null) {
+            throw new FileNotFoundException("Image not found");
         }
+
+        MediaType mediaType = imageService.getMediaType(resource.getFile());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(mediaType);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource);
     }
 }

@@ -3,7 +3,6 @@ package com.openclassroms.ApiP3.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,40 +24,35 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/messages")
 @CrossOrigin(origins = "http://localhost:4200")
 public class MessageController {
+
     @Autowired
     private MessageService messageService;
 
     /**
-     * @param messageDTO
-     * @return ResponseEntity<?>
+     * Envoie un message.
+     *
+     * @param messageDTO Le message à envoyer.
+     * @return ResponseEntity
      */
-    // Méthode existante pour envoyer un message
     @Operation(summary = "Envoyer un message", description = "Permet à un utilisateur d'envoyer un message. L'utilisateur doit avoir le rôle 'USER'.")
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> sendMessage(@RequestBody MessageDTO messageDTO) {
-        try {
-            messageService.sendMessage(messageDTO);
-            return ResponseEntity.ok().body("{\"message\": \"Message sent with success\"}");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        messageService.sendMessage(messageDTO);
+        return ResponseEntity.ok().body("{\"message\": \"Message sent with success\"}");
     }
 
-    // Nouvelle méthode pour récupérer les messages par utilisateur
+    /**
+     * Récupère les messages d'un utilisateur par son ID.
+     *
+     * @param userId L'ID de l'utilisateur.
+     * @return ResponseEntity
+     */
     @Operation(summary = "Récupérer les messages d'un utilisateur", description = "Retourne tous les messages associés à un utilisateur spécifié par son ID. L'utilisateur doit avoir le rôle 'USER'.")
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> getMessagesByUserId(@PathVariable Integer userId) {
-        try {
-            List<MessageDTO> messages = messageService.getMessagesByUserId(userId);
-            return ResponseEntity.ok(messages);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<List<MessageDTO>> getMessagesByUserId(@PathVariable Integer userId) {
+        List<MessageDTO> messages = messageService.getMessagesByUserId(userId);
+        return ResponseEntity.ok(messages);
     }
 }

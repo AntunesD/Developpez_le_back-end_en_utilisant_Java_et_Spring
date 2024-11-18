@@ -42,12 +42,8 @@ public class AuthController {
     @Operation(summary = "Enregistrement d'un utilisateur", description = "Permet à un utilisateur de s'inscrire avec un email et un mot de passe.")
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerDTO) {
-        try {
-            RegisterResponse authResponse = userService.registerUser(registerDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"message\": \"" + e.getMessage() + "\"}");
-        }
+        RegisterResponse authResponse = userService.registerUser(registerDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authResponse);
     }
 
     // Endpoint pour la connexion des utilisateurs
@@ -58,7 +54,7 @@ public class AuthController {
         TokenResponseDTO response = authService.authenticateUser(
                 loginRequest.getEmail(), loginRequest.getPassword());
 
-        if (response.getToken().equals("Invalid username or password")) {
+        if ("Invalid username or password".equals(response.getToken())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
@@ -69,17 +65,13 @@ public class AuthController {
     @Operation(summary = "Récupérer les informations de l'utilisateur connecté", description = "Retourne les détails de l'utilisateur actuellement connecté en utilisant le token JWT.")
     @GetMapping("/me")
     public UserDTO getCurrentUser() {
-        // Récupérer l'objet Authentication à partir du contexte de sécurité
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
             throw new IllegalStateException("No authentication information available");
         }
 
-        // Extraire le nom de l'utilisateur (qui est le sujet du token)
         String username = authentication.getName();
-
-        // Appeler le service pour récupérer les informations de l'utilisateur
         return userService.getCurrentUser(username);
     }
 

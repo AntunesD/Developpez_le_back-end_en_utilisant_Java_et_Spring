@@ -1,5 +1,6 @@
 package com.openclassroms.ApiP3.service;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -7,13 +8,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.openclassroms.ApiP3.dto.TokenResponseDTO;
+import com.openclassroms.ApiP3.exception.AuthenticationFailedException;
 
 @Service
 public class AuthService {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoder passwordEncoder;
-    private final JWTService jwtService; // Service pour générer le JWT
+    private final JWTService jwtService;
 
     public AuthService(CustomUserDetailsService customUserDetailsService,
             PasswordEncoder passwordEncoder,
@@ -24,33 +26,40 @@ public class AuthService {
     }
 
     /**
-     * @param username
-     * @param password
-     * @return TokenResponseDTO
+     * Authentifie un utilisateur et génère un JWT.
+     * 
+     * @param username nom d'utilisateur
+     * @param password mot de passe
+     * @return TokenResponseDTO contenant soit un token JWT, soit un message
+     *         d'erreur
      */
     public TokenResponseDTO authenticateUser(String username, String password) {
         try {
-            // 1. Charger l'utilisateur avec le service personnalisé
+            // Charger l'utilisateur à partir du service personnalisé
             UserDetails user = customUserDetailsService.loadUserByUsername(username);
 
-            // 2. Comparer le mot de passe
+            // Comparer les mots de passe
             boolean isPasswordMatch = passwordEncoder.matches(password, user.getPassword());
 
             if (!isPasswordMatch) {
-                return new TokenResponseDTO("Invalid username or password");
+                throw new BadCredentialsException("Invalid username or password");
             }
 
-            // 3. Créer un objet Authentication
+            // Créer un objet Authentication
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     user.getUsername(), user.getPassword(), user.getAuthorities());
 
-            // 4. Générer un token JWT
+            // Générer un token JWT
             String token = jwtService.generateToken(authentication);
 
-            // 5. Retourner le token
+            // Retourner le token
             return new TokenResponseDTO(token);
+        } catch (BadCredentialsException e) {
+            // Lever une exception personnalisée si les identifiants sont incorrects
+            throw new AuthenticationFailedException("Invalid username or password");
         } catch (Exception e) {
-            return new TokenResponseDTO("Invalid username or password");
+            // Gérer toute autre exception avec une exception générique
+            throw new AuthenticationFailedException("Authentication failed due to an unknown error");
         }
     }
 }

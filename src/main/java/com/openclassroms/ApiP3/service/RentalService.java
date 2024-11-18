@@ -67,16 +67,17 @@ public class RentalService {
     }
 
     public void handleCreateRental(MultipartFile picture, String name, BigDecimal surface, BigDecimal price,
-            String description) throws IOException, UnauthorizedException {
+            String description) {
+    try {
         // Vérifier l'utilisateur authentifié
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedException("User not authenticated");
+            throw new IllegalArgumentException("User not authenticated");
         }
 
         String username = authentication.getName();
         AppUser user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         // Gérer le fichier image
         String imageFileName = saveImageToFileSystem(picture);
@@ -91,7 +92,10 @@ public class RentalService {
 
         // Créer la location
         createRental(rentalDTO, user);
+    } catch (IOException e) {
+        throw new IllegalStateException("Error while saving the image", e); // Exception générique gérée dans le GlobalExceptionHandler
     }
+}
 
     private String saveImageToFileSystem(MultipartFile picture) throws IOException {
         // Créer le répertoire si nécessaire
