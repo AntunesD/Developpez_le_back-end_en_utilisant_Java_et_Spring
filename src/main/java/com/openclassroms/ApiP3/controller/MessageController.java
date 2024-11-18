@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.openclassroms.ApiP3.dto.MessageDTO;
+import com.openclassroms.ApiP3.dto.MessageResponseDTO; // Import du DTO de réponse
 import com.openclassroms.ApiP3.service.MessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,9 +38,11 @@ public class MessageController {
     @Operation(summary = "Envoyer un message", description = "Permet à un utilisateur d'envoyer un message. L'utilisateur doit avoir le rôle 'USER'.")
     @PostMapping
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> sendMessage(@RequestBody MessageDTO messageDTO) {
+    public ResponseEntity<MessageResponseDTO> sendMessage(@RequestBody MessageDTO messageDTO) {
         messageService.sendMessage(messageDTO);
-        return ResponseEntity.ok().body("{\"message\": \"Message sent with success\"}");
+        // Retourne la réponse sous forme d'un DTO
+        MessageResponseDTO response = new MessageResponseDTO("Message sent with success");
+        return ResponseEntity.ok(response);
     }
 
     /**

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.openclassroms.ApiP3.dto.MessageResponseDTO; // Import du DTO de réponse
 import com.openclassroms.ApiP3.dto.RentalDTO;
 import com.openclassroms.ApiP3.service.RentalService;
 
@@ -72,7 +73,7 @@ public class RentalController {
      */
     @Operation(summary = "Créer une location", description = "Permet de créer une nouvelle location avec une image. L'utilisateur doit être authentifié.")
     @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<String> createRental(
+    public ResponseEntity<MessageResponseDTO> createRental(
             @RequestParam("picture") MultipartFile picture,
             @RequestParam("name") String name,
             @RequestParam("surface") BigDecimal surface,
@@ -80,7 +81,9 @@ public class RentalController {
             @RequestParam("description") String description) {
 
         rentalService.handleCreateRental(picture, name, surface, price, description);
-        return ResponseEntity.ok("{\"message\": \"Rental created with image!\"}");
+        // Retourne la réponse sous forme d'un DTO
+        MessageResponseDTO response = new MessageResponseDTO("Rental created with image!");
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -96,7 +99,7 @@ public class RentalController {
      */
     @Operation(summary = "Mettre à jour une location", description = "Permet à l'utilisateur propriétaire de mettre à jour les informations d'une location existante.")
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateRental(
+    public ResponseEntity<MessageResponseDTO> updateRental(
             @PathVariable Integer id,
             @RequestParam String name,
             @RequestParam BigDecimal surface,
@@ -105,6 +108,8 @@ public class RentalController {
             Principal principal) {
 
         rentalService.updateRentalByOwner(id, name, surface, price, description, principal.getName());
-        return ResponseEntity.ok("{\"message\": \"Rental updated!\"}");
+        // Retourne la réponse sous forme d'un DTO
+        MessageResponseDTO response = new MessageResponseDTO("Rental updated!");
+        return ResponseEntity.ok(response);
     }
 }
